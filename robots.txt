@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: 
+
+Sitemap: https://2profitpulse.github.io/arabic-paraphraser/sitemap.xml
