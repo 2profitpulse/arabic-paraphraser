@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>أداة إعادة صياغة نصوص - AI Paraphraser</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f2f2f2;
+      color: #333;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #4CAF50;
+      margin-bottom: 25px;
+    }
+    textarea {
+      width: 100%;
+      height: 250px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      resize: vertical;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    button {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 14px 26px;
+      border-radius: 12px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #loading {
+      text-align: center;
+      font-weight: bold;
+      color: #888;
+      display: none;
+      margin-bottom: 20px;
+    }
+    #output {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      min-height: 160px;
+      white-space: pre-wrap;
+      font-size: 16px;
+      line-height: 1.5;
+      user-select: text;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🧠 أداة إعادة صياغة نصوص باللغة العربية (AI Paraphraser)</h1>
+
+  <textarea id="inputText" placeholder="أدخل نصك هنا (حتى 2000 كلمة)...">النجاح رحلة مليئة بالتحديات، فاستمر رغم الصعاب ولا تيأس.</textarea>
+
+  <div class="buttons">
+    <button id="btnParaphrase">🔄 إعادة الصياغة</button>
+    <button id="btnCopy">📋 نسخ النتيجة</button>
+  </div>
+
+  <div id="loading">⏳ جاري إعادة الصياغة، انتظر قليلاً...</div>
+
+  <div id="output">✅ سيظهر النص المعاد صياغته هنا بعد الضغط على الزر.</div>
+
+  <script>
+    const API_TOKEN = "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";
+    const MODEL_URL = "https://api-inference.huggingface.co/models/abhishek/arabic-paraphraser";
+
+    const inputText = document.getElementById("inputText");
+    const output = document.getElementById("output");
+    const loading = document.getElementById("loading");
+    const btnParaphrase = document.getElementById("btnParaphrase");
+    const btnCopy = document.getElementById("btnCopy");
+
+    btnParaphrase.addEventListener("click", async () => {
+      const text = inputText.value.trim();
+      if (!text) {
+        output.textContent = "⚠️ الرجاء إدخال نص أولاً.";
+        return;
+      }
+      if (text.split(" ").length > 2000) {
+        output.textContent = "⚠️ عذرًا، الحد الأقصى 2000 كلمة.";
+        return;
+      }
+
+      loading.style.display = "block";
+      output.textContent = "";
+
+      try {
+        const response = await fetch(MODEL_URL, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${API_TOKEN}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ inputs: text })
+        });
+
+        const data = await response.json();
+        loading.style.display = "none";
+
+        if (data && data[0]?.generated_text) {
+          output.textContent = data[0].generated_text;
+        } else if (data?.error) {
+          output.textContent = "❌ خطأ من النموذج: " + data.error;
+        } else {
+          output.textContent = "❌ لم يتم توليد نتيجة. حاول بنص أقصر أو لاحقًا.";
+        }
+
+      } catch (error) {
+        loading.style.display = "none";
+        output.textContent = "⚠️ فشل الاتصال بالخدمة. تحقق من الإنترنت وجرب مرة أخرى.";
+        console.error(error);
+      }
+    });
+
+    btnCopy.addEventListener("click", () => {
+      if (!output.textContent || output.textContent.includes("سيظهر النص")) {
+        alert("⚠️ لا يوجد نص لنسخه بعد.");
+        return;
+      }
+      navigator.clipboard.writeText(output.textContent)
+        .then(() => alert("✅ تم نسخ النص المعاد صياغته!"))
+        .catch(() => alert("❌ حدث خطأ أثناء النسخ."));
+    });
+  </script>
+
+</body>
+</html>
